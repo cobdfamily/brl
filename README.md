@@ -36,30 +36,28 @@ GET  /tables
 Consumers reference tables by short, URL-safe slugs (e.g.
 `en-ueb-g2`, `nemeth`, `fr-bfu-g2`) -- not by the
 `.ctb` / `.utb` filenames liblouis ships. The slug catalog
-lives in [`config/tables.json`](config/tables.json):
+lives in [`config/tables.yaml`](config/tables.yaml):
 
-```json
-[
-  {
-    "slug": "en-ueb-g2",
-    "table": "en-ueb-g2.ctb",
-    "name": "English (Unified English Braille) Grade 2 - contracted"
-  },
-  ...
-]
+```yaml
+- slug: en-ueb-g2
+  table: en-ueb-g2.ctb
+  name: English (Unified English Braille) Grade 2 - contracted
 ```
 
 The catalog is the source of truth for the slug allowlist.
-Adding a new slug means editing this JSON; the wrapper at
+Adding a new slug means editing this YAML; the wrapper at
 `bin/brl-translate` rejects any slug that isn't in the
 catalog. liblouis itself ships ~700 .ctb / .utb files; the
-catalog curates the subset this deployment exposes.
+catalog curates the subset this deployment exposes. The
+on-the-wire format at `/tables` is JSON (the
+`bin/cat-yaml-as-json` helper converts at request time)
+so consumers don't have to parse YAML.
 
 The current catalog covers English (UEB g1 / g2, US g1 /
 g2, GB g2), Nemeth math, French (BFU g1 / g2), German
 (g0 / g2), Spanish (g1 / g2), Italian, Portuguese, Dutch,
 Russian, Arabic, Greek, Hebrew, and Chinese (Taiwan). See
-[`config/tables.json`](config/tables.json) for the live
+[`config/tables.yaml`](config/tables.yaml) for the live
 list.
 
 ## Cogs
@@ -110,7 +108,7 @@ curl -fsS -X POST \
 3. url2code invokes
    `/app/bin/brl-translate <slug> <input> <output> [-c ...]`.
 4. The wrapper resolves the slug to a liblouis table file
-   via `config/tables.json`, then invokes
+   via `config/tables.yaml`, then invokes
    `file2brl -c literaryTextTable=<table> [-c ...] <input> [<output>]`.
 5. For `/translate`, the wrapper passes `-` as the output
    path so file2brl writes braille to stdout; url2code
@@ -139,7 +137,7 @@ curl -fsS -X POST \
 
 ```
 config/tools.yaml             # the entire HTTP surface
-config/tables.json            # slug -> liblouis-table catalog
+config/tables.yaml            # slug -> liblouis-table catalog
 bin/brl-translate             # shell wrapper: slug resolution + stdout/file
 Dockerfile                    # url2code base + liblouis-bin + liblouis-data
 docker-compose.yaml           # local-dev / production-shape compose

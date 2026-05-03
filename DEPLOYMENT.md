@@ -7,7 +7,7 @@ every `git tag v*`. The image is built on top of
 - `liblouis-bin` (`apt-get`) — the `file2brl` binary
 - `liblouis-data` (`apt-get`) — ~700 .ctb / .utb tables
 - `config/tools.yaml` — the entire HTTP surface
-- `config/tables.json` — curated slug -> table catalog
+- `config/tables.yaml` — curated slug -> table catalog
 - `bin/brl-translate` — shell wrapper that bridges
   url2code's request shape and file2brl's CLI
 
@@ -79,7 +79,7 @@ services:
       - "127.0.0.1:8000:8000"
     # Optional: ship your own catalog without rebuilding.
     # volumes:
-    #   - ./tables.json:/app/config/tables.json:ro
+    #   - ./tables.yaml:/app/config/tables.yaml:ro
 ```
 
 ```sh
@@ -136,19 +136,17 @@ docker compose up -d --no-deps brl
 Two paths.
 
 **In-image (rebuild):** edit
-[`config/tables.json`](config/tables.json), add an entry,
+[`config/tables.yaml`](config/tables.yaml), add an entry,
 tag a new release.
 
-```json
-{
-  "slug": "ja",
-  "table": "ja-kantenji.ctb",
-  "name": "Japanese (Kantenji)"
-}
+```yaml
+- slug: ja
+  table: ja-kantenji.ctb
+  name: Japanese (Kantenji)
 ```
 
 **Out-of-band (no rebuild):** mount your own
-`tables.json` over the bundled one. Useful for ops who
+`tables.yaml` over the bundled one. Useful for ops who
 want to expose a non-standard slug catalog without
 forking the image:
 
@@ -156,7 +154,7 @@ forking the image:
 services:
   brl:
     volumes:
-      - ./my-tables.json:/app/config/tables.json:ro
+      - ./my-tables.yaml:/app/config/tables.yaml:ro
 ```
 
 In either case, the `table` field must reference a file
@@ -201,5 +199,5 @@ uploads and outputs live in `/tmp` and are wiped on
 container restart. Consumers persist the converted
 bytes; the service does not.
 
-The `tables.json` catalog *is* worth versioning
+The `tables.yaml` catalog *is* worth versioning
 (it lives in this repo).

@@ -8,7 +8,7 @@
 # unprivileged runtime user). Container restart wipes them.
 #
 # To override the curated table catalog without rebuilding,
-# bind-mount your own tables.json at /app/config/tables.json.
+# bind-mount your own tables.yaml at /app/config/tables.yaml.
 # liblouis ships the actual .ctb / .utb files in the image
 # (via apt's liblouis-data); your catalog only needs the
 # slug -> filename mapping.
@@ -23,7 +23,7 @@ services:
     ports:
       - "${BRL_HTTP_PORT:-8000}:8000"
     # volumes:
-    #   - ./tables.json:/app/config/tables.json:ro
+    #   - ./tables.yaml:/app/config/tables.yaml:ro
     healthcheck:
       test:
         - "CMD"

@@ -195,7 +195,7 @@ def test_translate_file_returns_downloadable_brf(source_text):
 
 
 def test_translate_rejects_unknown_slug(source_text):
-    """The wrapper validates the slug against tables.json
+    """The wrapper validates the slug against tables.yaml
     and exits 64 (EX_USAGE) if it's missing. url2code
     surfaces a non-zero exit_code and the wrapper's stderr
     in the response so the caller sees the issue."""

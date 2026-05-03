@@ -1,15 +1,14 @@
-"""Static checks on config/tools.yaml + config/tables.json.
+"""Static checks on config/tools.yaml + config/tables.yaml.
 
 brl has no Python source of its own — the HTTP surface is
 declared in config/tools.yaml and the table catalog lives in
-config/tables.json. These tests pin both shapes so a
+config/tables.yaml. These tests pin both shapes so a
 careless edit can't ship a malformed config or a catalog
 that drifts from the YAML.
 """
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import pytest
@@ -17,7 +16,7 @@ import yaml
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 TOOLS_YAML = REPO_ROOT / "config" / "tools.yaml"
-TABLES_JSON = REPO_ROOT / "config" / "tables.json"
+TABLES_YAML = REPO_ROOT / "config" / "tables.yaml"
 
 
 @pytest.fixture(scope="module")
@@ -37,7 +36,7 @@ def by_name(endpoints):
 
 @pytest.fixture(scope="module")
 def catalog():
-    return json.loads(TABLES_JSON.read_text())
+    return yaml.safe_load(TABLES_YAML.read_text())
 
 
 # ---------------------------------------------------------------------------
@@ -70,12 +69,12 @@ def test_routes_are_unique(endpoints):
 
 
 # ---------------------------------------------------------------------------
-# tables.json catalog
+# tables.yaml catalog
 # ---------------------------------------------------------------------------
 
 
 def test_catalog_parses(catalog):
-    """tables.json must be a list of {slug, table, name}
+    """tables.yaml must be a list of {slug, table, name}
     objects. Anything else and the wrapper's slug
     resolution silently fails at request time."""
     assert isinstance(catalog, list)
@@ -293,9 +292,13 @@ def test_tables_endpoint_returns_native_json(by_name):
 
 
 def test_tables_endpoint_reads_catalog_file(by_name):
-    """The endpoint must read the same catalog file the
-    wrapper consults — drift here means /tables advertises
-    slugs the wrapper won't recognize, or vice versa."""
+    """The endpoint runs cat-yaml-as-json on the YAML
+    catalog -- drift between the served file and the file
+    the wrapper consults means /tables advertises slugs the
+    wrapper won't recognize, or vice versa. Pinning the
+    wrapper path also catches a stray refactor that switches
+    back to /bin/cat (which would emit raw YAML and break
+    native_json parsing)."""
     e = by_name["tables"]
-    assert e["command"]["executable"] == "/bin/cat"
-    assert e["command"]["args"] == ["/app/config/tables.json"]
+    assert e["command"]["executable"] == "/app/bin/cat-yaml-as-json"
+    assert e["command"]["args"] == ["/app/config/tables.yaml"]

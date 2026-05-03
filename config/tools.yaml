@@ -15,7 +15,7 @@
 #
 # Slug -> liblouis table-file resolution happens in the
 # wrapper at /app/bin/brl-translate, which reads
-# /app/config/tables.json. The wrapper then invokes file2brl
+# /app/config/tables.yaml. The wrapper then invokes file2brl
 # with ``-c literaryTextTable=<file>`` plus any extra ``-c``
 # cogs url2code rendered from the request flags.
 #
@@ -68,7 +68,7 @@ endpoints:
         # (rejects unknown slugs); url2code only enforces
         # that it's text. Listing every slug as an enum
         # here would couple the YAML to the catalog and
-        # break the "edit tables.json to add a slug" flow.
+        # break the "edit tables.yaml to add a slug" flow.
         table:
           type: text
       flags:
@@ -151,13 +151,13 @@ endpoints:
       name} object; pass the `slug` field as the `table`
       form param on /translate or /translate/file.
     command:
-      # `cat`-ing the JSON file is the simplest path to a
-      # GET endpoint that returns a static JSON document --
-      # url2code's native_json mode parses stdout and puts
-      # the result in `parsed_output` on the response.
-      executable: /bin/cat
+      # The catalog is authored as YAML (config/tables.yaml)
+      # so operators can edit with comments. cat-yaml-as-json
+      # converts to a JSON document on stdout; url2code's
+      # native_json mode then parses it into `parsed_output`.
+      executable: /app/bin/cat-yaml-as-json
       args:
-        - "/app/config/tables.json"
+        - "/app/config/tables.yaml"
       timeout_seconds: 5
     output:
       mode: native_json

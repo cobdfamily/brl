@@ -10,10 +10,12 @@
 #   POST /translate/file    — text in, braille file via download_url
 #   GET  /tables            — JSON catalog of supported slugs
 #
-# The catalog at config/tables.json maps human-readable slugs
+# The catalog at config/tables.yaml maps human-readable slugs
 # (e.g. ``en-ueb-g2``) to the actual liblouis ``.ctb`` / ``.utb``
 # table filenames. Operators add/remove entries by editing the
-# JSON; consumers never see the .ctb taxonomy.
+# YAML; consumers never see the .ctb taxonomy. /tables serves
+# the catalog converted to JSON at request time via the
+# bin/cat-yaml-as-json helper.
 
 ARG URL2CODE_TAG=latest
 FROM kibble.apps.blindhub.ca/cobdfamily/url2code:${URL2CODE_TAG}
@@ -52,7 +54,7 @@ COPY --chown=url2code:url2code config /app/config
 # stdout-vs-file output (see bin/brl-translate for the inline
 # rationale).
 COPY --chown=url2code:url2code bin /app/bin
-RUN chmod 0755 /app/bin/brl-translate
+RUN chmod 0755 /app/bin/brl-translate /app/bin/cat-yaml-as-json
 
 USER url2code
 

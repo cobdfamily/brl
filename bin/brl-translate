@@ -3,12 +3,14 @@
 # things between the YAML-defined HTTP surface and the CLI:
 #
 # 1. Slug -> table resolution. The form param ``table`` is a
-#    short slug from /app/config/tables.json (e.g.
+#    short slug from /app/config/tables.yaml (e.g.
 #    ``en-ueb-g2``); the wrapper looks up the actual liblouis
 #    table filename (e.g. ``en-ueb-g2.ctb``) and passes it as
 #    ``-C literaryTextTable=<file>``. This keeps consumers
 #    out of the .ctb/.utb taxonomy and lets operators curate
-#    which tables are exposed.
+#    which tables are exposed. Catalog is YAML so operators
+#    can comment per-entry; PyYAML is already in the url2code
+#    runtime venv at /app/.venv.
 #
 # 2. Stdout vs file output. Some endpoints want the braille
 #    text inline in the JSON response; others want a file
@@ -29,7 +31,7 @@
 
 set -e
 
-CATALOG="/app/config/tables.json"
+CATALOG="/app/config/tables.yaml"
 SLUG="$1"
 INPUT="$2"
 OUTPUT="$3"
@@ -50,12 +52,14 @@ if [ ! -f "$CATALOG" ]; then
     exit 70
 fi
 
-# Resolve slug -> liblouis table file. python3 ships in the
-# url2code base image, so no extra apt cost.
-TABLE="$(python3 -c '
-import json, sys
+# Resolve slug -> liblouis table file. PyYAML is in the
+# url2code runtime venv (it's how url2code parses tools.yaml
+# itself), so we use that interpreter explicitly rather than
+# whatever python3 resolves to on PATH.
+TABLE="$(/app/.venv/bin/python3 -c '
+import sys, yaml
 with open(sys.argv[1]) as f:
-    cat = json.load(f)
+    cat = yaml.safe_load(f)
 for entry in cat:
     if entry.get("slug") == sys.argv[2]:
         print(entry.get("table", ""))
