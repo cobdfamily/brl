@@ -62,17 +62,41 @@ list.
 
 ## Cogs
 
-`file2brl` accepts `-c key=value` pairs to tune output
-(line length, page length, table choices, emphasis
-behaviour, ...). Two are exposed as request flags today:
+`file2brl` accepts `-C key=value` pairs to tune output.
+The translation endpoints expose these as request form
+fields; url2code's `flag` + `valuePrefix` mechanism turns
+each `?key=value` into a `-C key=value` arg.
 
-- `cellsPerLine` (default 40) -- characters per line.
-- `linesPerPage` (default 25) -- lines per page.
+Page geometry:
 
-Adding more cogs is a YAML edit -- url2code's
-`flag` + `valuePrefix` mechanism turns
-`?cellsPerLine=40` into `-c cellsPerLine=40` directly.
-See `config/tools.yaml` for the existing pattern.
+- `cellsPerLine` (number, default 40) -- characters per line.
+- `linesPerPage` (number, default 25) -- lines per page.
+
+Page numbering (all enums; values are file2brl's literal
+`yes` / `no` and `top` / `bottom`):
+
+- `braillePages` (yes/no) -- emit braille page numbers.
+- `printPages` (yes/no) -- emit source page numbers.
+- `pageSeparator` (yes/no) -- separator line between pages.
+- `printPageNumberAt` (top/bottom) -- where the print page
+  number sits in the header/footer.
+- `braillePageNumberAt` (top/bottom) -- same for braille.
+- `printPageNumberRange` (yes/no) -- show ranges instead
+  of single numbers.
+- `continuePages` (yes/no) -- continue numbering across
+  page breaks.
+
+Table chaining (each value is a liblouis filename in
+`/usr/share/liblouis/tables/`):
+
+- `contractedTable` -- override the contracted table.
+- `mathTable` -- math table to chain (e.g. `nemeth.ctb`).
+- `computerBrailleTable` -- 8-dot computer braille
+  (e.g. `en-us-comp8.ctb`).
+
+Adding more cogs is a `tools.yaml` edit -- file2brl
+accepts ~30 cogs total; this is the most-used subset.
+The wrapper itself is cog-agnostic.
 
 ## Quick start
 

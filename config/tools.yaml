@@ -72,6 +72,7 @@ endpoints:
         table:
           type: text
       flags:
+        # Page geometry.
         - name: cellsPerLine
           flag: -C
           valuePrefix: "cellsPerLine="
@@ -80,6 +81,61 @@ endpoints:
           flag: -C
           valuePrefix: "linesPerPage="
           type: number
+
+        # Page numbering. yes/no come from file2brl's cog
+        # vocabulary; url2code's enum validation rejects
+        # other strings before they reach file2brl.
+        - name: braillePages
+          flag: -C
+          valuePrefix: "braillePages="
+          type: enum
+          choices: ["yes", "no"]
+        - name: printPages
+          flag: -C
+          valuePrefix: "printPages="
+          type: enum
+          choices: ["yes", "no"]
+        - name: pageSeparator
+          flag: -C
+          valuePrefix: "pageSeparator="
+          type: enum
+          choices: ["yes", "no"]
+        - name: printPageNumberAt
+          flag: -C
+          valuePrefix: "printPageNumberAt="
+          type: enum
+          choices: ["top", "bottom"]
+        - name: braillePageNumberAt
+          flag: -C
+          valuePrefix: "braillePageNumberAt="
+          type: enum
+          choices: ["top", "bottom"]
+        - name: printPageNumberRange
+          flag: -C
+          valuePrefix: "printPageNumberRange="
+          type: enum
+          choices: ["yes", "no"]
+        - name: continuePages
+          flag: -C
+          valuePrefix: "continuePages="
+          type: enum
+          choices: ["yes", "no"]
+
+        # Table chaining. Each is a liblouis filename; the
+        # caller is responsible for naming a file the image
+        # actually ships (see /usr/share/liblouis/tables/).
+        - name: contractedTable
+          flag: -C
+          valuePrefix: "contractedTable="
+          type: text
+        - name: mathTable
+          flag: -C
+          valuePrefix: "mathTable="
+          type: text
+        - name: computerBrailleTable
+          flag: -C
+          valuePrefix: "computerBrailleTable="
+          type: text
     uploads:
       - field_name: text
         placeholder: input_path
@@ -115,6 +171,7 @@ endpoints:
         table:
           type: text
       flags:
+        # Page geometry.
         - name: cellsPerLine
           flag: -C
           valuePrefix: "cellsPerLine="
@@ -123,6 +180,61 @@ endpoints:
           flag: -C
           valuePrefix: "linesPerPage="
           type: number
+
+        # Page numbering. yes/no come from file2brl's cog
+        # vocabulary; url2code's enum validation rejects
+        # other strings before they reach file2brl.
+        - name: braillePages
+          flag: -C
+          valuePrefix: "braillePages="
+          type: enum
+          choices: ["yes", "no"]
+        - name: printPages
+          flag: -C
+          valuePrefix: "printPages="
+          type: enum
+          choices: ["yes", "no"]
+        - name: pageSeparator
+          flag: -C
+          valuePrefix: "pageSeparator="
+          type: enum
+          choices: ["yes", "no"]
+        - name: printPageNumberAt
+          flag: -C
+          valuePrefix: "printPageNumberAt="
+          type: enum
+          choices: ["top", "bottom"]
+        - name: braillePageNumberAt
+          flag: -C
+          valuePrefix: "braillePageNumberAt="
+          type: enum
+          choices: ["top", "bottom"]
+        - name: printPageNumberRange
+          flag: -C
+          valuePrefix: "printPageNumberRange="
+          type: enum
+          choices: ["yes", "no"]
+        - name: continuePages
+          flag: -C
+          valuePrefix: "continuePages="
+          type: enum
+          choices: ["yes", "no"]
+
+        # Table chaining. Each is a liblouis filename; the
+        # caller is responsible for naming a file the image
+        # actually ships (see /usr/share/liblouis/tables/).
+        - name: contractedTable
+          flag: -C
+          valuePrefix: "contractedTable="
+          type: text
+        - name: mathTable
+          flag: -C
+          valuePrefix: "mathTable="
+          type: text
+        - name: computerBrailleTable
+          flag: -C
+          valuePrefix: "computerBrailleTable="
+          type: text
     uploads:
       - field_name: text
         placeholder: input_path

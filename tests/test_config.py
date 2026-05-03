@@ -187,26 +187,59 @@ def test_translate_endpoints_default_page_geometry(translate_endpoints):
             f"{e['name']} missing linesPerPage default"
 
 
+# Each row: (cog name, valuePrefix, url2code type, choices).
+# Listed once and consumed by the test below; adding a cog
+# means adding a row here AND in both translate endpoint
+# blocks in tools.yaml. Drift between the two is what this
+# pinning is for.
+EXPECTED_COGS = [
+    # Page geometry.
+    ("cellsPerLine",         "cellsPerLine=",         "number", []),
+    ("linesPerPage",         "linesPerPage=",         "number", []),
+    # Page numbering.
+    ("braillePages",         "braillePages=",         "enum",   ["yes", "no"]),
+    ("printPages",           "printPages=",           "enum",   ["yes", "no"]),
+    ("pageSeparator",        "pageSeparator=",        "enum",   ["yes", "no"]),
+    ("printPageNumberAt",    "printPageNumberAt=",    "enum",   ["top", "bottom"]),
+    ("braillePageNumberAt",  "braillePageNumberAt=",  "enum",   ["top", "bottom"]),
+    ("printPageNumberRange", "printPageNumberRange=", "enum",   ["yes", "no"]),
+    ("continuePages",        "continuePages=",        "enum",   ["yes", "no"]),
+    # Table chaining.
+    ("contractedTable",      "contractedTable=",      "text",   []),
+    ("mathTable",            "mathTable=",            "text",   []),
+    ("computerBrailleTable", "computerBrailleTable=", "text",   []),
+]
+
+
 def test_translate_endpoints_use_cog_flag_mapping(translate_endpoints):
-    """cellsPerLine / linesPerPage map to file2brl's
-    ``-C key=value`` cog format via url2code's `flag` +
-    `valuePrefix` mechanism. file2brl's cog flag is
-    ``-C`` / ``--config-setting`` (uppercase) -- ``-c`` is
-    not a flag and would fail with "invalid option."
-    Drift here is the kind of thing that silently passes
-    the wrong page geometry to file2brl."""
-    expected = {
-        "cellsPerLine": "cellsPerLine=",
-        "linesPerPage": "linesPerPage=",
-    }
+    """Every cog in EXPECTED_COGS is wired up the same way
+    on both translate endpoints: file2brl's ``-C key=value``
+    cog format via url2code's `flag` + `valuePrefix`
+    mechanism. file2brl's cog flag is ``-C`` /
+    ``--config-setting`` (uppercase) -- ``-c`` is not a flag
+    and would fail with "invalid option."
+
+    Drift here silently passes the wrong page geometry,
+    skips a numbering toggle, or chains the wrong math
+    table -- every kind of regression that's invisible from
+    a 200 response."""
     for e in translate_endpoints:
         flags = {f["name"]: f for f in e["request"]["flags"]}
-        for name, prefix in expected.items():
+        # Pin the count too so an accidental drop is caught.
+        assert len(flags) == len(EXPECTED_COGS), \
+            f"{e['name']} has {len(flags)} flags, expected {len(EXPECTED_COGS)}"
+        for name, prefix, kind, choices in EXPECTED_COGS:
             assert name in flags, \
                 f"{e['name']} missing flag {name!r}"
-            assert flags[name]["flag"] == "-C"
-            assert flags[name]["valuePrefix"] == prefix
-            assert flags[name]["type"] == "number"
+            assert flags[name]["flag"] == "-C", \
+                f"{e['name']}.{name} flag is not -C"
+            assert flags[name]["valuePrefix"] == prefix, \
+                f"{e['name']}.{name} valuePrefix mismatch"
+            assert flags[name]["type"] == kind, \
+                f"{e['name']}.{name} type {flags[name]['type']!r} != {kind!r}"
+            if kind == "enum":
+                assert flags[name].get("choices") == choices, \
+                    f"{e['name']}.{name} choices mismatch"
 
 
 def test_translate_endpoints_use_text_output_mode(translate_endpoints):
