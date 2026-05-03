@@ -1,0 +1,103 @@
+#!/bin/sh
+# Thin wrapper around liblouis's file2brl that bridges three
+# things between the YAML-defined HTTP surface and the CLI:
+#
+# 1. Slug -> table resolution. The form param ``table`` is a
+#    short slug from /app/config/tables.json (e.g.
+#    ``en-ueb-g2``); the wrapper looks up the actual liblouis
+#    table filename (e.g. ``en-ueb-g2.ctb``) and passes it as
+#    ``-C literaryTextTable=<file>``. This keeps consumers
+#    out of the .ctb/.utb taxonomy and lets operators curate
+#    which tables are exposed.
+#
+# 2. Stdout vs file output. Some endpoints want the braille
+#    text inline in the JSON response; others want a file
+#    that callers fetch via download_url. Pass ``-`` as the
+#    output path for stdout output; any other value writes
+#    to that exact file.
+#
+# 3. stderr -> stdout. file2brl logs to stderr; url2code's
+#    text-mode parser only reads stdout. The ``2>&1`` makes
+#    failures visible in the response body.
+#
+# usage:
+#   brl-translate <slug> <input_path> <output_path> [extra_args...]
+#
+# extra_args are forwarded verbatim to file2brl after the
+# table cog -- so url2code's flag rendering can append
+# ``-c cellsPerLine=40 -c linesPerPage=25`` etc.
+
+set -e
+
+CATALOG="/app/config/tables.json"
+SLUG="$1"
+INPUT="$2"
+OUTPUT="$3"
+shift 3 || true
+
+if [ -z "$SLUG" ] || [ -z "$INPUT" ] || [ -z "$OUTPUT" ]; then
+    echo "usage: brl-translate <slug> <input_path> <output_path> [extra...]" >&2
+    exit 64
+fi
+
+if [ ! -f "$INPUT" ]; then
+    echo "input file does not exist: $INPUT" >&2
+    exit 66
+fi
+
+if [ ! -f "$CATALOG" ]; then
+    echo "table catalog missing: $CATALOG" >&2
+    exit 70
+fi
+
+# Resolve slug -> liblouis table file. python3 ships in the
+# url2code base image, so no extra apt cost.
+TABLE="$(python3 -c '
+import json, sys
+with open(sys.argv[1]) as f:
+    cat = json.load(f)
+for entry in cat:
+    if entry.get("slug") == sys.argv[2]:
+        print(entry.get("table", ""))
+        break
+' "$CATALOG" "$SLUG")"
+
+if [ -z "$TABLE" ]; then
+    echo "unknown table slug: $SLUG" >&2
+    echo "see /tables for the full list of valid slugs." >&2
+    exit 64
+fi
+
+# Per-invocation writable path for file2brl's temp + log
+# files. Without -w, file2brl tries the legacy /var/tmp /
+# CWD locations and aborts with "Can't open temporary
+# file." in our slim runtime layout.
+WORKDIR="$(mktemp -d)"
+trap 'rm -rf "$WORKDIR"' EXIT
+
+# file2brl's `-C` cog format takes "key=value" strings and
+# can be repeated. The literaryTextTable cog points at the
+# resolved table; any further `-C key=value` pairs get
+# tacked on by url2code's flag rendering as ``$@``.
+#
+# `-p` (`--poorly-formatted`) tells file2brl to treat the
+# input as plain text rather than the structured XML it
+# defaults to. brl's surface accepts plain text uploads;
+# without -p file2brl tries to parse them as XML and fails.
+if [ "$OUTPUT" = "-" ]; then
+    # Inline mode: write braille to stdout, no file output.
+    exec file2brl \
+        -p \
+        -w "$WORKDIR" \
+        -C "literaryTextTable=$TABLE" \
+        "$@" \
+        "$INPUT" 2>&1
+else
+    # File mode: write to the path url2code generated.
+    exec file2brl \
+        -p \
+        -w "$WORKDIR" \
+        -C "literaryTextTable=$TABLE" \
+        "$@" \
+        "$INPUT" "$OUTPUT" 2>&1
+fi

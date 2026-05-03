@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+# Tests scratch
+tests/.venv/
+
+# Editor / OS
+.DS_Store
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# Braille / source-text scratch — sample inputs / outputs
+# developers drop in for ad-hoc testing. Test fixtures used
+# by tests/test_e2e.py are generated at runtime.
+*.brf
+*.brl
+*.txt
+!tests/**/*.txt
+*.utdml
+*.xml

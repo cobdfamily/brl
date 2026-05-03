@@ -1,0 +1,102 @@
+[
+  {
+    "slug": "en-ueb-g1",
+    "table": "en-ueb-g1.ctb",
+    "name": "English (Unified English Braille) Grade 1 - uncontracted"
+  },
+  {
+    "slug": "en-ueb-g2",
+    "table": "en-ueb-g2.ctb",
+    "name": "English (Unified English Braille) Grade 2 - contracted"
+  },
+  {
+    "slug": "en-us-g1",
+    "table": "en-us-g1.ctb",
+    "name": "US English Grade 1 - uncontracted (legacy EBAE)"
+  },
+  {
+    "slug": "en-us-g2",
+    "table": "en-us-g2.ctb",
+    "name": "US English Grade 2 - contracted (legacy EBAE)"
+  },
+  {
+    "slug": "en-gb-g2",
+    "table": "en-gb-g2.ctb",
+    "name": "British English Grade 2 - contracted (legacy SEB)"
+  },
+  {
+    "slug": "nemeth",
+    "table": "nemeth.ctb",
+    "name": "Nemeth braille code (US mathematics)"
+  },
+  {
+    "slug": "fr-bfu-g2",
+    "table": "fr-bfu-g2.ctb",
+    "name": "French (Braille Francais Uniformise) Grade 2"
+  },
+  {
+    "slug": "fr-bfu-g1",
+    "table": "fr-bfu-g1.utb",
+    "name": "French (Braille Francais Uniformise) Grade 1"
+  },
+  {
+    "slug": "de-g0",
+    "table": "de-g0.utb",
+    "name": "German Grade 0 - uncontracted"
+  },
+  {
+    "slug": "de-g2",
+    "table": "de-g2.ctb",
+    "name": "German Grade 2 - contracted"
+  },
+  {
+    "slug": "es-g1",
+    "table": "es-g1.ctb",
+    "name": "Spanish Grade 1"
+  },
+  {
+    "slug": "es-g2",
+    "table": "es-g2.ctb",
+    "name": "Spanish Grade 2"
+  },
+  {
+    "slug": "it",
+    "table": "it.ctb",
+    "name": "Italian"
+  },
+  {
+    "slug": "pt",
+    "table": "pt.ctb",
+    "name": "Portuguese"
+  },
+  {
+    "slug": "nl",
+    "table": "nl.ctb",
+    "name": "Dutch"
+  },
+  {
+    "slug": "ru",
+    "table": "ru-litbrl.ctb",
+    "name": "Russian (literary)"
+  },
+  {
+    "slug": "ar",
+    "table": "ar.ctb",
+    "name": "Arabic"
+  },
+  {
+    "slug": "el",
+    "table": "el.ctb",
+    "name": "Greek"
+  },
+  {
+    "slug": "he",
+    "table": "he.ctb",
+    "name": "Hebrew"
+  },
+  {
+    "slug": "zh-tw",
+    "table": "zh-tw.ctb",
+    "name": "Chinese (Taiwan)"
+  }
+]

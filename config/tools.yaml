@@ -1,0 +1,163 @@
+# brl -- liblouis file2brl as an HTTP service.
+#
+# Three endpoints:
+#
+#   POST /translate         — text in, braille text in JSON out
+#   POST /translate/file    — text in, braille file via download_url
+#   GET  /tables            — JSON catalog of supported slugs
+#
+# /translate and /translate/file accept the same form fields:
+#
+#   text             multipart upload, the source text
+#   table            slug from /tables (e.g. "en-ueb-g2")
+#   cellsPerLine     optional, default 40
+#   linesPerPage     optional, default 25
+#
+# Slug -> liblouis table-file resolution happens in the
+# wrapper at /app/bin/brl-translate, which reads
+# /app/config/tables.json. The wrapper then invokes file2brl
+# with ``-c literaryTextTable=<file>`` plus any extra ``-c``
+# cogs url2code rendered from the request flags.
+#
+# cellsPerLine / linesPerPage are exposed as request flags
+# whose ``valuePrefix`` directly produces file2brl's cog
+# format: a request param of cellsPerLine=40 becomes the
+# args ``-C cellsPerLine=40`` -- a clean 1:1 mapping
+# url2code was designed to support. (file2brl's cog flag
+# is ``-C`` / ``--config-setting``, not ``-c``.)
+
+api:
+  title: brl
+  default_root: /
+
+logging:
+  level: INFO
+
+
+endpoints:
+
+  # =====================================================================
+  # /translate -- braille text inline in the JSON response
+  # =====================================================================
+
+  - name: translate
+    route: /translate
+    method: POST
+    description: >-
+      Translate uploaded text to braille using the named
+      table. Returns the braille text inline in the JSON
+      response (under `stdout`). For a downloadable .brf
+      file instead, use /translate/file.
+    defaults:
+      cellsPerLine: "40"
+      linesPerPage: "25"
+    command:
+      executable: /app/bin/brl-translate
+      args:
+        # slug -> table resolution happens in the wrapper.
+        - "{table}"
+        - "{input_path}"
+        # "-" tells the wrapper to write braille to stdout
+        # rather than a file. url2code captures stdout into
+        # the `stdout` field of the JSON response.
+        - "-"
+      timeout_seconds: 60
+    request:
+      validations:
+        # The wrapper validates `table` against the catalog
+        # (rejects unknown slugs); url2code only enforces
+        # that it's text. Listing every slug as an enum
+        # here would couple the YAML to the catalog and
+        # break the "edit tables.json to add a slug" flow.
+        table:
+          type: text
+      flags:
+        - name: cellsPerLine
+          flag: -C
+          valuePrefix: "cellsPerLine="
+          type: number
+        - name: linesPerPage
+          flag: -C
+          valuePrefix: "linesPerPage="
+          type: number
+    uploads:
+      - field_name: text
+        placeholder: input_path
+        temp_dir: /tmp/brl/uploads
+    output:
+      mode: text
+
+
+  # =====================================================================
+  # /translate/file -- braille .brf delivered via download_url
+  # =====================================================================
+
+  - name: translate-file
+    route: /translate/file
+    method: POST
+    description: >-
+      Translate uploaded text to braille and return a
+      download URL for the resulting .brf file. Same form
+      params as /translate. Best for callers feeding an
+      embosser or archiving the output.
+    defaults:
+      cellsPerLine: "40"
+      linesPerPage: "25"
+    command:
+      executable: /app/bin/brl-translate
+      args:
+        - "{table}"
+        - "{input_path}"
+        - "{output_path}"
+      timeout_seconds: 60
+    request:
+      validations:
+        table:
+          type: text
+      flags:
+        - name: cellsPerLine
+          flag: -C
+          valuePrefix: "cellsPerLine="
+          type: number
+        - name: linesPerPage
+          flag: -C
+          valuePrefix: "linesPerPage="
+          type: number
+    uploads:
+      - field_name: text
+        placeholder: input_path
+        temp_dir: /tmp/brl/uploads
+    output_files:
+      - placeholder: output_path
+        filename_placeholder: output_filename
+        output_dir: /tmp/brl/outputs
+        # .brf is the standard "Braille Ready File" extension
+        # most embossers and braille displays expect.
+        suffix: .brf
+    output:
+      mode: text
+
+
+  # =====================================================================
+  # /tables -- discovery: the slug -> liblouis-table catalog
+  # =====================================================================
+
+  - name: tables
+    route: /tables
+    method: GET
+    description: >-
+      Return the curated catalog of translation tables this
+      deployment exposes. Each entry is a {slug, table,
+      name} object; pass the `slug` field as the `table`
+      form param on /translate or /translate/file.
+    command:
+      # `cat`-ing the JSON file is the simplest path to a
+      # GET endpoint that returns a static JSON document --
+      # url2code's native_json mode parses stdout and puts
+      # the result in `parsed_output` on the response.
+      executable: /bin/cat
+      args:
+        - "/app/config/tables.json"
+      timeout_seconds: 5
+    output:
+      mode: native_json
