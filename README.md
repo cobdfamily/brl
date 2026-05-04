@@ -104,13 +104,13 @@ The wrapper itself is cog-agnostic.
 docker compose up -d
 
 # Discover available tables.
-curl -s http://localhost:8000/tables | jq '.parsed_output[].slug'
+curl -s http://localhost:8000/v1/tables | jq '.parsed_output[].slug'
 
 # Translate a Word doc-shaped plain text to UEB grade 2.
 curl -fsS -X POST \
      -F text=@./report.txt \
      -F table=en-ueb-g2 \
-     http://localhost:8000/translate | jq -r .stdout
+     http://localhost:8000/v1/translate | jq -r .stdout
 
 # Get a downloadable .brf for an embosser.
 curl -fsS -X POST \
@@ -118,7 +118,7 @@ curl -fsS -X POST \
      -F table=en-ueb-g2 \
      -F cellsPerLine=40 \
      -F linesPerPage=25 \
-     http://localhost:8000/translate/file | jq -r '.output_files.output_path.download_url'
+     http://localhost:8000/v1/translate/file | jq -r '.output_files.output_path.download_url'
 # Then GET that URL to retrieve the .brf bytes.
 ```
 

@@ -71,7 +71,7 @@ def test_tables_returns_curated_catalog():
     """GET /tables returns the catalog as parsed_output:
     a list of {slug, table, name} entries. Without it
     consumers can't discover valid slugs."""
-    r = requests.get(BRL_BASE_URL + "/tables", timeout=5)
+    r = requests.get(BRL_BASE_URL + "/v1/tables", timeout=5)
     assert r.status_code == 200, r.text
     body = r.json()
     catalog = body.get("parsed_output")
@@ -98,7 +98,7 @@ def test_translate_inline_returns_braille_output(source_text):
     the source."""
     with open(source_text, "rb") as f:
         r = requests.post(
-            BRL_BASE_URL + "/translate",
+            BRL_BASE_URL + "/v1/translate",
             data={"table": "en-ueb-g2"},
             files={"text": ("source.txt", f, "text/plain")},
             timeout=60,
@@ -123,7 +123,7 @@ def test_translate_inline_honours_cellsperline(source_text):
     to file2brl."""
     with open(source_text, "rb") as f:
         wide = requests.post(
-            BRL_BASE_URL + "/translate",
+            BRL_BASE_URL + "/v1/translate",
             data={"table": "en-ueb-g2", "cellsPerLine": "80"},
             files={"text": ("source.txt", f, "text/plain")},
             timeout=60,
@@ -134,7 +134,7 @@ def test_translate_inline_honours_cellsperline(source_text):
 
     with open(source_text, "rb") as f:
         narrow = requests.post(
-            BRL_BASE_URL + "/translate",
+            BRL_BASE_URL + "/v1/translate",
             data={"table": "en-ueb-g2", "cellsPerLine": "20"},
             files={"text": ("source.txt", f, "text/plain")},
             timeout=60,
@@ -162,7 +162,7 @@ def test_translate_file_returns_downloadable_brf(source_text):
     and not the source text."""
     with open(source_text, "rb") as f:
         r = requests.post(
-            BRL_BASE_URL + "/translate/file",
+            BRL_BASE_URL + "/v1/translate/file",
             data={"table": "en-ueb-g2"},
             files={"text": ("source.txt", f, "text/plain")},
             timeout=60,
@@ -201,7 +201,7 @@ def test_translate_rejects_unknown_slug(source_text):
     in the response so the caller sees the issue."""
     with open(source_text, "rb") as f:
         r = requests.post(
-            BRL_BASE_URL + "/translate",
+            BRL_BASE_URL + "/v1/translate",
             data={"table": "this-slug-does-not-exist"},
             files={"text": ("source.txt", f, "text/plain")},
             timeout=30,

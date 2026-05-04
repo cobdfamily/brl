@@ -102,19 +102,19 @@ curl -fsS https://brl.cobd.ca/
 # Generated OpenAPI docs at /docs and /redocs.
 
 # List supported slugs:
-curl -fsS https://brl.cobd.ca/tables | jq '.parsed_output[].slug'
+curl -fsS https://brl.cobd.ca/v1/tables | jq '.parsed_output[].slug'
 
 # Translate to UEB grade 2 (inline braille):
 curl -fsS -X POST \
   -F text=@./hello.txt \
   -F table=en-ueb-g2 \
-  https://brl.cobd.ca/translate | jq -r .stdout
+  https://brl.cobd.ca/v1/translate | jq -r .stdout
 
 # Translate to a downloadable .brf:
 curl -fsS -X POST \
   -F text=@./hello.txt \
   -F table=en-ueb-g2 \
-  https://brl.cobd.ca/translate/file | jq
+  https://brl.cobd.ca/v1/translate/file | jq
 ```
 
 ## Routine operations
