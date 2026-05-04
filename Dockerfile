@@ -54,7 +54,12 @@ COPY --chown=url2code:url2code config /app/config
 # stdout-vs-file output (see bin/brl-translate for the inline
 # rationale).
 COPY --chown=url2code:url2code bin /app/bin
-RUN chmod 0755 /app/bin/brl-translate /app/bin/cat-yaml-as-json
+RUN chmod 0755 /app/bin/brl-translate
+
+# cat-yaml-as-json is provided by url2code:>=1.0.7 itself
+# (lives at /app/bin/cat-yaml-as-json in the base layer);
+# this image's bin/ COPY layers on top without clobbering it.
+# Used by the /v1/tables discovery endpoint.
 
 USER url2code
 
