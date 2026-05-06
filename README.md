@@ -2,8 +2,7 @@
 
 [![test](https://github.com/cobdfamily/brl/actions/workflows/test.yml/badge.svg)](https://github.com/cobdfamily/brl/actions/workflows/test.yml)
 
-Braille translation service. Print text in, contracted or
-uncontracted braille out — driven by liblouis's `file2brl`.
+A simple print to Braille API.
 
 This is a YAML-defined microservice — no Python source in
 the repo, only tests. The HTTP surface lives in
