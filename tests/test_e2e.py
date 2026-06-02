@@ -190,6 +190,48 @@ def test_translate_file_returns_downloadable_brf(source_text):
 
 
 # ---------------------------------------------------------------------------
+# /backtranslate — braille -> print round trip
+# ---------------------------------------------------------------------------
+
+
+def test_backtranslate_roundtrip_grade1(tmp_path_factory):
+    """print -> braille -> print via the uncontracted en-ueb-g1
+    table. Page numbering is suppressed so the braille fed back
+    carries no running-head digits. Checks are loose (matching
+    this suite's philosophy): the round trip yields non-empty
+    print text, distinct from the braille it was handed, and
+    containing ASCII letters."""
+    src = tmp_path_factory.mktemp("bt") / "src.txt"
+    src.write_text("the cat sat on the mat\n", encoding="utf-8")
+    with open(src, "rb") as f:
+        fwd = requests.post(
+            BRL_BASE_URL + "/v1/translate",
+            data={"table": "en-ueb-g1", "braillePages": "no", "printPages": "no"},
+            files={"text": ("src.txt", f, "text/plain")},
+            timeout=60,
+        )
+    assert fwd.status_code == 200, fwd.text
+    braille = (fwd.json().get("stdout") or "").strip()
+    assert braille, "forward translation produced no braille"
+
+    back = requests.post(
+        BRL_BASE_URL + "/v1/backtranslate",
+        data={"table": "en-ueb-g1"},
+        files={"text": ("braille.txt", braille.encode("utf-8"), "text/plain")},
+        timeout=60,
+    )
+    assert back.status_code == 200, back.text
+    body = back.json()
+    assert body.get("exit_code") == 0, body
+    out = (body.get("stdout") or "").strip()
+    assert out, "back-translation produced no output"
+    assert out != braille, \
+        "output identical to the braille input -- no back-translation happened"
+    assert any(c.isascii() and c.isalpha() for c in out), \
+        f"back-translation produced no latin text: {out[:80]!r}"
+
+
+# ---------------------------------------------------------------------------
 # error path — unknown slug rejected by the wrapper
 # ---------------------------------------------------------------------------
 

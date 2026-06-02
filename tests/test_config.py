@@ -78,11 +78,12 @@ def test_no_endpoint_overrides_default_root(endpoints):
         )
 
 
-def test_three_endpoints_exact(by_name):
-    """The surface is exactly: translate, translate-file,
-    tables. New additions go here in lockstep with their
-    YAML."""
-    assert set(by_name) == {"translate", "translate-file", "tables"}
+def test_endpoints_exact(by_name):
+    """The surface is exactly these four. New additions go
+    here in lockstep with their YAML."""
+    assert set(by_name) == {
+        "translate", "translate-file", "backtranslate", "tables",
+    }
 
 
 def test_routes_are_unique(endpoints):
@@ -322,6 +323,43 @@ def test_translate_file_declares_brf_output(by_name):
     assert out["placeholder"] == "output_path"
     assert out["filename_placeholder"] == "output_filename"
     assert out["suffix"] == ".brf"
+
+
+# ---------------------------------------------------------------------------
+# /backtranslate -- braille -> print, inline (stdout)
+# ---------------------------------------------------------------------------
+
+
+def test_backtranslate_calls_backtranslate_wrapper(by_name):
+    """Back-translation goes through its own wrapper
+    (lou_translate --backward), never file2brl (which is
+    forward-only)."""
+    e = by_name["backtranslate"]
+    assert e["command"]["executable"] == "/app/bin/brl-backtranslate"
+
+
+def test_backtranslate_is_inline_stdout(by_name):
+    """Args are <slug> <input> "-" (stdout sentinel). No
+    output_files; text output mode -- the print text comes
+    back in the response's stdout field."""
+    e = by_name["backtranslate"]
+    args = e["command"]["args"]
+    assert args[0] == "{table}"
+    assert args[1] == "{input_path}"
+    assert args[2] == "-"
+    assert not e.get("output_files")
+    assert e["output"]["mode"] == "text"
+
+
+def test_backtranslate_validates_table_and_takes_text_upload(by_name):
+    """Same `table` validation + `text` upload convention as
+    the forward endpoints."""
+    e = by_name["backtranslate"]
+    assert e["request"]["validations"]["table"]["type"] == "text"
+    uploads = e.get("uploads") or []
+    assert len(uploads) == 1
+    assert uploads[0]["field_name"] == "text"
+    assert uploads[0]["placeholder"] == "input_path"
 
 
 # ---------------------------------------------------------------------------

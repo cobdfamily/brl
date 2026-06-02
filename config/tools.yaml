@@ -28,7 +28,7 @@
 
 api:
   title: brl
-  version: "1.0.0"
+  version: "1.1.0"
   # API surface lives under /v1/. Liveness ``/`` and the
   # OpenAPI docs ``/docs`` / ``/redocs`` stay at the root.
   # Future breaking changes ship at /v2/ without disturbing
@@ -251,6 +251,43 @@ endpoints:
         # .brf is the standard "Braille Ready File" extension
         # most embossers and braille displays expect.
         suffix: .brf
+    output:
+      mode: text
+
+
+  # =====================================================================
+  # /backtranslate -- braille -> print text, inline in the response
+  # =====================================================================
+
+  - name: backtranslate
+    route: /backtranslate
+    method: POST
+    description: >-
+      Back-translate uploaded braille to print text using the
+      named table (liblouis ``lou_translate --backward``).
+      Returns the print text inline in the JSON response (under
+      `stdout`) -- the inverse of /translate. Best results on
+      uncontracted (grade-1) tables; contracted tables
+      back-translate but may not round-trip exactly.
+    command:
+      executable: /app/bin/brl-backtranslate
+      args:
+        - "{table}"
+        - "{input_path}"
+        # "-" -> write print text to stdout (captured into the
+        # JSON `stdout` field). lou_translate is a stdin->stdout
+        # filter, so no temp/CWD writes -- safe under the
+        # hardened read-only-root container.
+        - "-"
+      timeout_seconds: 60
+    request:
+      validations:
+        table:
+          type: text
+    uploads:
+      - field_name: text
+        placeholder: input_path
+        temp_dir: /tmp/brl/uploads
     output:
       mode: text
 

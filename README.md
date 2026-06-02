@@ -24,6 +24,13 @@ POST /translate/file    same body shape
    Same translation, but return a download URL pointing
    at a .brf file. Best for callers feeding an embosser.
 
+POST /backtranslate     body: text (multipart, braille),
+                              table (slug)
+   The inverse: back-translate uploaded braille to print
+   text (liblouis lou_translate --backward), returned
+   inline in the `stdout` field. Best on uncontracted
+   (grade-1) tables.
+
 GET  /tables
    Return the curated catalog of supported translation
    tables. Use the `slug` field of any entry as the
@@ -147,9 +154,12 @@ curl -fsS -X POST \
   (Traefik / nginx) — see DEPLOYMENT.md.
 - **No persistence.** Uploads and converted outputs live
   in `/tmp` and are wiped on container restart.
-- **No back-translation.** file2brl is one-way (print →
-  braille). For braille → print, point a downstream
-  service at `lou_back_translate` instead.
+- **Contracted back-translation is lossy.** `/backtranslate`
+  (braille → print, via `lou_translate --backward`) round-trips
+  cleanly on uncontracted grade-1 tables; contracted (grade-2)
+  braille back-translates but may not reproduce the exact
+  source. file2brl itself remains forward-only — back-translation
+  uses liblouis core's `lou_translate`.
 - **No semantic-XML markup.** file2brl can do more than
   this service exposes (heading styles, emphasis,
   multi-volume layout); brl wires up the plain-text path

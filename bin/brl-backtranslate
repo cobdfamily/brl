@@ -1,0 +1,75 @@
+#!/bin/sh
+# Braille -> print back-translation via liblouis lou_translate.
+#
+# The forward path (brl-translate) uses file2brl, which is
+# one-way. Back-translation uses liblouis core's lou_translate
+# with --backward: it reads braille on stdin and writes print
+# text on stdout. lou_translate ships in liblouis-bin, pulled
+# into the image transitively by liblouisutdml-bin (see the
+# Dockerfile note).
+#
+# Slug -> table resolution mirrors brl-translate: the `table`
+# form param is a catalog slug; we resolve it to the liblouis
+# table filename and hand that to lou_translate, which resolves
+# it against the liblouis table path
+# (/usr/share/liblouis/tables) the same way file2brl's
+# literaryTextTable cog does.
+#
+# usage:
+#   brl-backtranslate <slug> <input_path> <output_path>
+#
+# output_path "-" (the mode brl exposes) -> stdout, captured by
+# url2code into the JSON `stdout` field. lou_translate is a pure
+# stdin->stdout filter, so there are no temp / CWD / $HOME
+# writes -- safe under the hardened read-only-root container.
+
+set -e
+
+CATALOG="/app/config/tables.yaml"
+SLUG="$1"
+INPUT="$2"
+OUTPUT="$3"
+
+if [ -z "$SLUG" ] || [ -z "$INPUT" ] || [ -z "$OUTPUT" ]; then
+    echo "usage: brl-backtranslate <slug> <input_path> <output_path>" >&2
+    exit 64
+fi
+
+if [ ! -f "$INPUT" ]; then
+    echo "input file does not exist: $INPUT" >&2
+    exit 66
+fi
+
+if [ ! -f "$CATALOG" ]; then
+    echo "table catalog missing: $CATALOG" >&2
+    exit 70
+fi
+
+# Resolve slug -> liblouis table file. PyYAML lives in the
+# url2code runtime venv; use that interpreter explicitly (same
+# as brl-translate) rather than whatever python3 is on PATH.
+TABLE="$(/app/.venv/bin/python3 -c '
+import sys, yaml
+with open(sys.argv[1]) as f:
+    cat = yaml.safe_load(f)
+for entry in cat:
+    if entry.get("slug") == sys.argv[2]:
+        print(entry.get("table", ""))
+        break
+' "$CATALOG" "$SLUG")"
+
+if [ -z "$TABLE" ]; then
+    echo "unknown table slug: $SLUG" >&2
+    echo "see /tables for the full list of valid slugs." >&2
+    exit 64
+fi
+
+# lou_translate reads braille on stdin, writes print on stdout;
+# --backward selects the braille->text direction. 2>&1 surfaces
+# liblouis diagnostics in the response body, matching the
+# forward wrapper.
+if [ "$OUTPUT" = "-" ]; then
+    exec lou_translate --backward "$TABLE" < "$INPUT" 2>&1
+else
+    lou_translate --backward "$TABLE" < "$INPUT" > "$OUTPUT" 2>&1
+fi

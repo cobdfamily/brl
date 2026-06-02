@@ -10,6 +10,24 @@ empty and is filled forward from this point.
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-06-01
+
+### Added
+- **Braille → print back-translation** at
+  `POST /v1/backtranslate`. Uploaded braille is back-translated
+  to print text via liblouis core's `lou_translate --backward`
+  and returned inline in the response `stdout`. Slug → table
+  resolution mirrors `/translate` (same `text` upload + `table`
+  validation). New `bin/brl-backtranslate` wrapper — a pure
+  stdin→stdout filter, so it's safe under the hardened
+  read-only-root container. Round-trips cleanly on uncontracted
+  grade-1 tables; contracted (grade-2) tables back-translate but
+  may not reproduce the exact source. file2brl itself stays
+  forward-only.
+
+### Changed
+- `api.version` `1.0.0 -> 1.1.0`.
+
 ## [1.0.0] - 2026-06-01
 
 First tagged release of brl. Captures the existing surface
@@ -32,4 +50,5 @@ plus this sprint's standardization work.
 - Hardened `docker-compose.yaml`: read-only root, tmpfs `/tmp`,
   `cap_drop: ALL`, `no-new-privileges` (Sprint 4).
 
+[1.1.0]: https://github.com/cobdfamily/brl/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/cobdfamily/brl/commits/v1.0.0
