@@ -10,6 +10,18 @@ empty and is filled forward from this point.
 
 ## [Unreleased]
 
+## [1.1.2] - 2026-06-01
+
+### Changed
+- Base image `1.0.8 -> 2.1.0`, closing the base-pin drift that left
+  brl on the Sprint-1 engine. Picks up the async executor (2.0.0),
+  streamed I/O (2.1.0), optional rate limiting + request-size caps
+  (1.3.0), the readiness probe + graceful drain (1.4.0), `/metrics`
+  (1.5.0), and OTel tracing (1.6.0). 2.0.0 is a breaking engine
+  release (subprocess timeout/cancellation edge-cases may shift);
+  certified against the e2e suite (CI).
+- `api.version` `1.1.1 -> 1.1.2`.
+
 ## [1.1.1] - 2026-06-01
 
 ### Fixed
@@ -65,6 +77,7 @@ plus this sprint's standardization work.
 - Hardened `docker-compose.yaml`: read-only root, tmpfs `/tmp`,
   `cap_drop: ALL`, `no-new-privileges` (Sprint 4).
 
+[1.1.2]: https://github.com/cobdfamily/brl/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/cobdfamily/brl/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/cobdfamily/brl/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/cobdfamily/brl/commits/v1.0.0
