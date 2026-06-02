@@ -22,21 +22,25 @@ FROM kibble.apps.blindhub.ca/cobdfamily/url2code:${URL2CODE_TAG}
 
 USER root
 
-# Two liblouis-shaped packages:
+# Three liblouis-shaped packages:
 #
 # - liblouisutdml-bin ships file2brl (and xml2brl). file2brl
-#   is what brl wraps; without this package the wrapper fails
-#   with exit 127 ("command not found").
-# - liblouis-data ships the ~700 .ctb / .utb translation
-#   tables under /usr/share/liblouis/tables/. file2brl uses
-#   these via the literaryTextTable cog the wrapper sets.
-#
-# liblouis-bin (lou_translate, lou_checktable, ...) is pulled
-# in as a transitive dep of liblouisutdml-bin; we don't need
-# it explicitly.
+#   is what the forward /translate path wraps; without this
+#   package the wrapper fails with exit 127 ("command not
+#   found").
+# - liblouis-bin ships the core CLI: lou_translate (used by the
+#   /backtranslate path with --backward), lou_checktable, etc.
+#   It is NOT a transitive dep of liblouisutdml-bin -- that
+#   pulls the liblouis shared library, not the -bin CLI -- so it
+#   must be listed explicitly. Omitting it 127s back-translation.
+# - liblouis-data ships the ~700 .ctb / .utb translation tables
+#   under /usr/share/liblouis/tables/. Both file2brl (via the
+#   literaryTextTable cog) and lou_translate resolve table names
+#   against this dir.
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
         liblouisutdml-bin \
+        liblouis-bin \
         liblouis-data \
  && rm -rf /var/lib/apt/lists/*
 
